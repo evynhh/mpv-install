@@ -199,7 +199,7 @@ function Upgrade-Youtubedl {
     }
     else {
         Write-Host "youtube-dl doesn't exist. " -ForegroundColor Green -NoNewline
-        $result = Read-KeyOrTimeout "Downloading youtube-dl.." "Y"
+        $result = Read-KeyOrTimeout "" "Y"
         Write-Host ""
 
         if ($result -eq 'Y') {
@@ -214,24 +214,19 @@ function Upgrade-Youtubedl {
         Download-Youtubedl $latest_release
     }
 }
+function Cleanup {
+	Remove-Item mpv-*.7z
+	Remove-Item -Recurse -Force 7z
+	Remove-Item -Recurse -Force installer
+}
 
 function Read-KeyOrTimeout ($prompt, $key){
     $seconds = 0
     $startTime = Get-Date
     $timeOut = New-TimeSpan -Seconds $seconds
 
-    Write-Host "$prompt " -ForegroundColor Green
-
-    # Basic progress bar
-    [Console]::CursorLeft = 0
-    [Console]::Write("[")
-    [Console]::CursorLeft = $seconds + 2
-    [Console]::Write("]")
-    [Console]::CursorLeft = 1
-
     while (-not [System.Console]::KeyAvailable) {
         $currentTime = Get-Date
-        Write-Host "#" -ForegroundColor Green -NoNewline
         if ($currentTime -gt $startTime + $timeOut) {
             Break
         }
@@ -261,8 +256,9 @@ try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Upgrade-Mpv
     Upgrade-Youtubedl
-    Write-Host "Operation completed" -ForegroundColor Magenta
+    Write-Host "Operation completed." -ForegroundColor Magenta
 	Write-Host "You now have to set the path for mpv. Add '%appdata%\mpv' to your path, use your preferred search engine to figure out how to do so." -ForegroundColor Red
+	Cleanup
 }
 catch [System.Exception] {
     Write-Host $_.Exception.Message -ForegroundColor Red
